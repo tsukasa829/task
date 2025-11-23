@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wiki Editor</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <h1>📝 Wiki Editor</h1>
+    
+    <div class="section">
+      <label for="fileSelect">ファイル選択:</label>
+      <select id="fileSelect">
+        <option value="todo">Todo</option>
+        <option value="tenets">Tenets</option>
+        <option value="strategy">Strategy</option>
+        <option value="constitution">Constitution</option>
+      </select>
+    </div>
+
+    <div class="section">
+      <label for="content">内容:</label>
+      <textarea id="content" rows="6" placeholder="追加する内容を入力..."></textarea>
+    </div>
+
+    <div class="section">
+      <button id="addBtn" class="btn btn-primary">追加</button>
+      <button id="refreshBtn" class="btn btn-secondary">更新</button>
+    </div>
+
+    <div id="status" class="status"></div>
+
+    <div class="section">
+      <h3>最近の追加</h3>
+      <div id="recentList" class="recent-list">
+        <!-- 動的に追加 -->
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

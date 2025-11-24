@@ -8,8 +8,8 @@ const STORAGE_KEY = 'task_form_draft'
 const Header: React.FC = () => {
   const [showMenu, setShowMenu] = useState(false)
   const { tasks, addTaskWithApi } = useTaskStore()
-  const { addKnowledge, getTopTagsByCount, knowledges } = useKnowledgeStore()
-  const { tags } = useTagStore()
+  const { addKnowledge, getTopTagsByCount, knowledges, fetchKnowledges } = useKnowledgeStore()
+  const { tags, fetchTags } = useTagStore()
   const [title, setTitle] = useState('')
   
   // ナレッジ数の多い順に3個表示、0件の場合はデフォルトタグ
@@ -17,8 +17,11 @@ const Header: React.FC = () => {
   const defaultTagNames = tags.map(t => t.name).slice(0, 3)
   const displayTags = topTags.length > 0 ? topTags : defaultTagNames
 
-  // localStorage から復元
+  // PGliteデータとlocalStorageを初期化
   useEffect(() => {
+    fetchKnowledges()
+    fetchTags()
+    
     const savedDraft = localStorage.getItem(STORAGE_KEY)
     if (savedDraft) {
       setTitle(savedDraft)

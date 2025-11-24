@@ -1,86 +1,87 @@
 import { create } from 'zustand'
 import { Knowledge } from '../types'
+import * as api from '../services/api-pglite'
 
-const STORAGE_KEY = 'task_knowledge'
+const RECENT_TAGS_KEY = 'task_recent_tags'
 
 interface KnowledgeStore {
   knowledges: Knowledge[]
   recentTags: string[]
+  isLoading: boolean
   
   // Actions
-  addKnowledge: (content: string, tag: string) => void
-  deleteKnowledge: (id: string) => void
-  loadKnowledges: () => void
+  fetchKnowledges: () => Promise<void>
+  addKnowledge: (content: string, tag: string) => Promise<void>
+  deleteKnowledge: (id: string) => Promise<void>
   updateRecentTags: (tag: string) => void
   getTopTagsByCount: (limit: number) => string[]
 }
 
-// LocalStorageから読み込み
-const loadFromStorage = (): Knowledge[] => {
+// 最近使用したタグをLocalStorageから読み込み
+const loadRecentTags = (): string[] => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
+    const stored = localStorage.getItem(RECENT_TAGS_KEY)
     return stored ? JSON.parse(stored) : []
   } catch (error) {
-    console.error('Failed to load knowledges:', error)
     return []
   }
 }
 
-// LocalStorageに保存
-const saveToStorage = (knowledges: Knowledge[]) => {
+// 最近使用したタグをLocalStorageに保存
+const saveRecentTags = (tags: string[]) => {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(knowledges))
+    localStorage.setItem(RECENT_TAGS_KEY, JSON.stringify(tags))
   } catch (error) {
-    console.error('Failed to save knowledges:', error)
+    console.error('Failed to save recent tags:', error)
   }
 }
 
 export const useKnowledgeStore = create<KnowledgeStore>((set, get) => ({
-  knowledges: loadFromStorage(),
-  recentTags: [],
+  knowledges: [],
+  recentTags: loadRecentTags(),
+  isLoading: false,
 
-  addKnowledge: (content: string, tag: string) => {
-    const newKnowledge: Knowledge = {
-      id: Date.now().toString(),
-      content,
-      tag,
-      createdAt: new Date().toISOString()
+  fetchKnowledges: async () => {
+    set({ isLoading: true })
+    try {
+      const knowledges = await api.fetchKnowledges()
+      set({ knowledges, isLoading: false })
+    } catch (error) {
+      console.error('Failed to fetch knowledges:', error)
+      set({ isLoading: false })
     }
-
-    set((state) => {
-      const newKnowledges = [...state.knowledges, newKnowledge]
-      saveToStorage(newKnowledges)
-      return { knowledges: newKnowledges }
-    })
-
-    // タグを最近使用したタグに追加
-    get().updateRecentTags(tag)
   },
 
-  deleteKnowledge: (id: string) => {
-    set((state) => {
-      const newKnowledges = state.knowledges.filter(k => k.id !== id)
-      saveToStorage(newKnowledges)
-      return { knowledges: newKnowledges }
-    })
+  addKnowledge: async (content: string, tag: string) => {
+    try {
+      const newKnowledge = await api.addKnowledge(content, tag)
+      set((state) => ({
+        knowledges: [...state.knowledges, newKnowledge]
+      }))
+      
+      // タグを最近使用したタグに追加
+      get().updateRecentTags(tag)
+    } catch (error) {
+      console.error('Failed to add knowledge:', error)
+    }
   },
 
-  loadKnowledges: () => {
-    set({ knowledges: loadFromStorage() })
+  deleteKnowledge: async (id: string) => {
+    try {
+      await api.deleteKnowledge(id)
+      set((state) => ({
+        knowledges: state.knowledges.filter(k => k.id !== id)
+      }))
+    } catch (error) {
+      console.error('Failed to delete knowledge:', error)
+    }
   },
 
   updateRecentTags: (tag: string) => {
     set((state) => {
       // タグを先頭に追加し、重複を削除、最大5件まで保持
       const newTags = [tag, ...state.recentTags.filter(t => t !== tag)].slice(0, 5)
-      
-      // recentTagsもlocalStorageに保存
-      try {
-        localStorage.setItem('task_recent_tags', JSON.stringify(newTags))
-      } catch (error) {
-        console.error('Failed to save recent tags:', error)
-      }
-      
+      saveRecentTags(newTags)
       return { recentTags: newTags }
     })
   },
@@ -102,15 +103,5 @@ export const useKnowledgeStore = create<KnowledgeStore>((set, get) => ({
   }
 }))
 
-// 初期化時に最近使用したタグを読み込み
-const loadRecentTags = () => {
-  try {
-    const stored = localStorage.getItem('task_recent_tags')
-    return stored ? JSON.parse(stored) : []
-  } catch (error) {
-    return []
-  }
-}
-
-// ストア初期化時に最近のタグを読み込む
-useKnowledgeStore.setState({ recentTags: loadRecentTags() })
+// 初回ロード
+useKnowledgeStore.getState().fetchKnowledges()

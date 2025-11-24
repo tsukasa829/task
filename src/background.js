@@ -39,29 +39,29 @@ initDb().catch(console.error)
 
 console.log('Wiki Editor background script loaded');
 
-// Context menu - 現在は使用していないためコメントアウト
-// chrome.runtime.onInstalled.addListener(() => {
-//   chrome.contextMenus.create({
-//     id: 'addToWiki',
-//     title: 'Wikiに追加',
-//     contexts: ['selection']
-//   });
-//   
-//   // 拡張機能インストール時にもDB初期化
-//   initDb().catch(console.error)
-// });
+// Context menu
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: 'addToWiki',
+    title: 'Wikiに追加',
+    contexts: ['selection']
+  });
+  
+  // 拡張機能インストール時にもDB初期化
+  initDb().catch(console.error)
+});
 
-// Handle context menu clicks - 現在は使用していないためコメントアウト
-// chrome.contextMenus.onClicked.addListener((info, tab) => {
-//   if (info.menuItemId === 'addToWiki') {
-//     const selectedText = info.selectionText;
-//     
-//     // Open popup with selected text
-//     chrome.storage.local.set({ 
-//       quickAdd: selectedText 
-//     });
-//   }
-// });
+// Handle context menu clicks
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === 'addToWiki') {
+    const selectedText = info.selectionText;
+    
+    // Open popup with selected text
+    chrome.storage.local.set({ 
+      quickAdd: selectedText 
+    });
+  }
+});
 
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

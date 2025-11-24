@@ -12,13 +12,14 @@ interface TaskItemProps {
 
 const TaskItem: React.FC<TaskItemProps> = ({ task, filterType }) => {
   const { toggleTaskWithApi, deleteTaskWithApi, setTasks, tasks } = useTaskStore()
-  const { addKnowledge, getTopTagsByCount } = useKnowledgeStore()
-  const { getTagNames } = useTagStore()
+  const { addKnowledge, getTopTagsByCount, knowledges } = useKnowledgeStore()
+  const { tags } = useTagStore()
   const [showTagMenu, setShowTagMenu] = useState(false)
   
   // ナレッジ数の多い順に3個表示、0件の場合はデフォルトタグ
   const topTags = getTopTagsByCount(3)
-  const displayTags = topTags.length > 0 ? topTags : getTagNames().slice(0, 3)
+  const defaultTagNames = tags.map(t => t.name).slice(0, 3)
+  const displayTags = topTags.length > 0 ? topTags : defaultTagNames
 
   const handlePostpone = async () => {
     const newDate = new Date()

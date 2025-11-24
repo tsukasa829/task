@@ -2,14 +2,13 @@ import { create } from 'zustand'
 import { Knowledge } from '../types'
 
 const STORAGE_KEY = 'task_knowledge'
-const DEFAULT_TAG = '未分類'
 
 interface KnowledgeStore {
   knowledges: Knowledge[]
   recentTags: string[]
   
   // Actions
-  addKnowledge: (content: string, tag?: string) => void
+  addKnowledge: (content: string, tag: string) => void
   deleteKnowledge: (id: string) => void
   loadKnowledges: () => void
   updateRecentTags: (tag: string) => void
@@ -39,11 +38,11 @@ export const useKnowledgeStore = create<KnowledgeStore>((set, get) => ({
   knowledges: loadFromStorage(),
   recentTags: [],
 
-  addKnowledge: (content: string, tag?: string) => {
+  addKnowledge: (content: string, tag: string) => {
     const newKnowledge: Knowledge = {
       id: Date.now().toString(),
       content,
-      tag: tag || DEFAULT_TAG,
+      tag,
       createdAt: new Date().toISOString()
     }
 
@@ -54,9 +53,7 @@ export const useKnowledgeStore = create<KnowledgeStore>((set, get) => ({
     })
 
     // タグを最近使用したタグに追加
-    if (tag && tag !== DEFAULT_TAG) {
-      get().updateRecentTags(tag)
-    }
+    get().updateRecentTags(tag)
   },
 
   deleteKnowledge: (id: string) => {

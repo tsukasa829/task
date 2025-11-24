@@ -13,6 +13,12 @@ export interface Knowledge {
   createdAt: string
 }
 
+export interface Tag {
+  id: string
+  name: string
+  createdAt: string
+}
+
 export interface TaskStore {
   tasks: Task[]
   isLoading: boolean

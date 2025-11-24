@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Task } from '../types'
 import { useTaskStore } from '../stores/todoStore'
 import { useKnowledgeStore } from '../stores/knowledgeStore'
+import { useTagStore } from '../stores/tagStore'
 import * as api from '../services/api-pglite'
 
 interface TaskItemProps {
@@ -12,7 +13,11 @@ interface TaskItemProps {
 const TaskItem: React.FC<TaskItemProps> = ({ task, filterType }) => {
   const { toggleTaskWithApi, deleteTaskWithApi, setTasks, tasks } = useTaskStore()
   const { addKnowledge, recentTags } = useKnowledgeStore()
+  const { getTagNames } = useTagStore()
   const [showTagMenu, setShowTagMenu] = useState(false)
+  
+  // デフォルトタグを使用
+  const displayTags = recentTags.length > 0 ? recentTags : getTagNames()
 
   const handlePostpone = async () => {
     const newDate = new Date()
@@ -149,7 +154,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, filterType }) => {
                 onClick={() => setShowTagMenu(false)}
               />
               <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
-                {recentTags.map(tag => (
+                {displayTags.map(tag => (
                   <button
                     key={tag}
                     onClick={() => handleConvertToKnowledge(tag)}

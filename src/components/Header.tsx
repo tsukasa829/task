@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useTaskStore } from '../stores/todoStore'
 import { useKnowledgeStore } from '../stores/knowledgeStore'
+import { useTagStore } from '../stores/tagStore'
 
 const STORAGE_KEY = 'task_form_draft'
 
@@ -8,7 +9,11 @@ const Header: React.FC = () => {
   const [showMenu, setShowMenu] = useState(false)
   const { tasks, addTaskWithApi } = useTaskStore()
   const { addKnowledge, recentTags } = useKnowledgeStore()
+  const { getTagNames } = useTagStore()
   const [title, setTitle] = useState('')
+  
+  // デフォルトタグを使用
+  const displayTags = recentTags.length > 0 ? recentTags : getTagNames()
 
   // localStorage から復元
   useEffect(() => {
@@ -173,7 +178,7 @@ const Header: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <span className="text-xs text-gray-500">ナレッジ:</span>
-          {recentTags.map(tag => (
+          {displayTags.map(tag => (
             <button
               key={tag}
               type="button"

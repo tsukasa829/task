@@ -6,6 +6,13 @@ export interface Task {
   dueDate?: string
 }
 
+export interface Knowledge {
+  id: string
+  content: string
+  tag: string
+  createdAt: string
+}
+
 export interface TaskStore {
   tasks: Task[]
   isLoading: boolean
@@ -18,4 +25,15 @@ export interface TaskStore {
   deleteTask: (id: string) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
+}
+
+export interface KnowledgeStore {
+  knowledges: Knowledge[]
+  recentTags: string[]
+  
+  // Actions
+  addKnowledge: (content: string, tag?: string) => void
+  deleteKnowledge: (id: string) => void
+  getKnowledgesByTag: (tag: string) => Knowledge[]
+  updateRecentTags: (tag: string) => void
 }

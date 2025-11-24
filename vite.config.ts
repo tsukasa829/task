@@ -35,7 +35,8 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         input: {
           popup: 'src/popup/popup.html'
-        }
+        },
+        external: ['@electric-sql/pglite']
       },
       chunkSizeWarningLimit: 10000
     },

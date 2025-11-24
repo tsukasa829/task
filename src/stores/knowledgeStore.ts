@@ -12,6 +12,7 @@ interface KnowledgeStore {
   deleteKnowledge: (id: string) => void
   loadKnowledges: () => void
   updateRecentTags: (tag: string) => void
+  getTopTagsByCount: (limit: number) => string[]
 }
 
 // LocalStorageから読み込み
@@ -82,6 +83,22 @@ export const useKnowledgeStore = create<KnowledgeStore>((set, get) => ({
       
       return { recentTags: newTags }
     })
+  },
+
+  getTopTagsByCount: (limit: number) => {
+    const { knowledges } = get()
+    
+    // タグごとのナレッジ数をカウント
+    const tagCounts = knowledges.reduce((acc, knowledge) => {
+      acc[knowledge.tag] = (acc[knowledge.tag] || 0) + 1
+      return acc
+    }, {} as Record<string, number>)
+    
+    // カウント順にソートして上位を取得
+    return Object.entries(tagCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, limit)
+      .map(([tag]) => tag)
   }
 }))
 

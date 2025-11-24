@@ -8,12 +8,13 @@ const STORAGE_KEY = 'task_form_draft'
 const Header: React.FC = () => {
   const [showMenu, setShowMenu] = useState(false)
   const { tasks, addTaskWithApi } = useTaskStore()
-  const { addKnowledge, recentTags } = useKnowledgeStore()
+  const { addKnowledge, getTopTagsByCount } = useKnowledgeStore()
   const { getTagNames } = useTagStore()
   const [title, setTitle] = useState('')
   
-  // デフォルトタグを使用
-  const displayTags = recentTags.length > 0 ? recentTags : getTagNames()
+  // ナレッジ数の多い順に3個表示、0件の場合はデフォルトタグ
+  const topTags = getTopTagsByCount(3)
+  const displayTags = topTags.length > 0 ? topTags : getTagNames().slice(0, 3)
 
   // localStorage から復元
   useEffect(() => {

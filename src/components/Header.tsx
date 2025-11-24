@@ -1,10 +1,27 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTaskStore } from '../stores/todoStore'
+
+const STORAGE_KEY = 'task_form_draft'
 
 const Header: React.FC = () => {
   const [showMenu, setShowMenu] = useState(false)
   const { tasks, addTaskWithApi } = useTaskStore()
   const [title, setTitle] = useState('')
+
+  // localStorage から復元
+  useEffect(() => {
+    const savedDraft = localStorage.getItem(STORAGE_KEY)
+    if (savedDraft) {
+      setTitle(savedDraft)
+    }
+  }, [])
+
+  // 入力内容を localStorage に保存
+  useEffect(() => {
+    if (title) {
+      localStorage.setItem(STORAGE_KEY, title)
+    }
+  }, [title])
 
   const handleExportJSON = () => {
     const dataStr = JSON.stringify(tasks, null, 2)
@@ -32,7 +49,9 @@ const Header: React.FC = () => {
 
     await addTaskWithApi(title.trim(), finalDueDate)
 
+    // フォームをリセットし、localStorage もクリア
     setTitle('')
+    localStorage.removeItem(STORAGE_KEY)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -51,7 +70,9 @@ const Header: React.FC = () => {
     
     await addTaskWithApi(title.trim(), quickDueDate)
     
+    // フォームをリセットし、localStorage もクリア
     setTitle('')
+    localStorage.removeItem(STORAGE_KEY)
   }
 
   return (

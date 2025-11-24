@@ -51,12 +51,32 @@ const Header: React.FC = () => {
     
     if (!title.trim()) return
 
-    // 期限が指定されていない場合は1日後をデフォルトに
+    const trimmedTitle = title.trim()
+    
+    // 末尾が :○○ の形式かチェック
+    const tagMatch = trimmedTitle.match(/[:：](.+)$/)
+    
+    if (tagMatch) {
+      // ナレッジとして追加
+      const tag = tagMatch[1].trim()
+      const content = trimmedTitle.substring(0, trimmedTitle.lastIndexOf(tagMatch[0])).trim()
+      
+      if (content) {
+        addKnowledge(content, tag)
+        
+        // フォームをリセットし、localStorage もクリア
+        setTitle('')
+        localStorage.removeItem(STORAGE_KEY)
+        return
+      }
+    }
+
+    // 通常のタスクとして追加
     const date = new Date()
     date.setDate(date.getDate() + (useWeekDueDate ? 7 : 1))
     const finalDueDate = date.toISOString().split('T')[0]
 
-    await addTaskWithApi(title.trim(), finalDueDate)
+    await addTaskWithApi(trimmedTitle, finalDueDate)
 
     // フォームをリセットし、localStorage もクリア
     setTitle('')

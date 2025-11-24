@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { useTaskStore } from '../stores/todoStore'
+import { useKnowledgeStore } from '../stores/knowledgeStore'
 
 const STORAGE_KEY = 'task_form_draft'
 
 const Header: React.FC = () => {
   const [showMenu, setShowMenu] = useState(false)
   const { tasks, addTaskWithApi } = useTaskStore()
+  const { addKnowledge, recentTags } = useKnowledgeStore()
   const [title, setTitle] = useState('')
 
   // localStorage から復元
@@ -69,6 +71,16 @@ const Header: React.FC = () => {
     const quickDueDate = date.toISOString().split('T')[0]
     
     await addTaskWithApi(title.trim(), quickDueDate)
+    
+    // フォームをリセットし、localStorage もクリア
+    setTitle('')
+    localStorage.removeItem(STORAGE_KEY)
+  }
+
+  const handleQuickKnowledge = (tag: string) => {
+    if (!title.trim()) return
+    
+    addKnowledge(title.trim(), tag)
     
     // フォームをリセットし、localStorage もクリア
     setTitle('')
@@ -157,6 +169,21 @@ const Header: React.FC = () => {
           >
             1年
           </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">ナレッジ:</span>
+          {recentTags.map(tag => (
+            <button
+              key={tag}
+              type="button"
+              onClick={() => handleQuickKnowledge(tag)}
+              disabled={!title.trim()}
+              className="px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {tag}
+            </button>
+          ))}
         </div>
       </form>
     </header>

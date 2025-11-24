@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Task } from '../types'
 import { useTaskStore } from '../stores/todoStore'
+import { useKnowledgeStore } from '../stores/knowledgeStore'
 import * as api from '../services/api-pglite'
 
 interface TaskItemProps {
@@ -10,6 +11,8 @@ interface TaskItemProps {
 
 const TaskItem: React.FC<TaskItemProps> = ({ task, filterType }) => {
   const { toggleTaskWithApi, deleteTaskWithApi, setTasks, tasks } = useTaskStore()
+  const { addKnowledge, recentTags } = useKnowledgeStore()
+  const [showTagMenu, setShowTagMenu] = useState(false)
 
   const handlePostpone = async () => {
     const newDate = new Date()
@@ -37,6 +40,16 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, filterType }) => {
       t.id === task.id ? { ...t, dueDate: newDueDate } : t
     )
     setTasks(updatedTasks)
+  }
+
+  const handleConvertToKnowledge = async (tag: string) => {
+    // TODOのtitleをcontentとしてナレッジに追加
+    addKnowledge(task.title, tag)
+    
+    // TODOを削除
+    await deleteTaskWithApi(task.id)
+    
+    setShowTagMenu(false)
   }
 
   const isWeekFilter = filterType === 'week'
@@ -96,7 +109,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, filterType }) => {
           </div>
         </div>
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 relative">
           <button
             onClick={() => deleteTaskWithApi(task.id)}
             className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 rounded transition-all"
@@ -107,15 +120,46 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, filterType }) => {
             </svg>
           </button>
           {!task.completed && (
-            <button
-              onClick={handlePostpone}
-              className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-1 hover:bg-green-50 rounded transition-all"
-              title="7日後に延期"
-            >
-              <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-              </svg>
-            </button>
+            <>
+              <button
+                onClick={handlePostpone}
+                className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-1 hover:bg-green-50 rounded transition-all"
+                title="7日後に延期"
+              >
+                <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setShowTagMenu(!showTagMenu)}
+                className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-1 hover:bg-purple-50 rounded transition-all"
+                title="ナレッジに変換"
+              >
+                <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </button>
+            </>
+          )}
+          
+          {showTagMenu && (
+            <>
+              <div 
+                className="fixed inset-0 z-10" 
+                onClick={() => setShowTagMenu(false)}
+              />
+              <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+                {recentTags.map(tag => (
+                  <button
+                    key={tag}
+                    onClick={() => handleConvertToKnowledge(tag)}
+                    className="w-full px-3 py-2 text-left text-xs text-gray-700 hover:bg-purple-50 transition-colors"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </>
           )}
         </div>
       </div>

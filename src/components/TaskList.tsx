@@ -1,15 +1,18 @@
 import React, { useState } from 'react'
 import { Task } from '../types'
 import TaskItem from './TaskItem'
+import KnowledgeItem from './KnowledgeItem'
+import { useKnowledgeStore } from '../stores/knowledgeStore'
 
 interface TaskListProps {
   tasks: Task[]
 }
 
-type FilterType = 'none' | 'today' | 'week' | 'year'
+type FilterType = 'none' | 'today' | 'week' | 'year' | 'knowledge'
 
 const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
   const [filter, setFilter] = useState<FilterType>('today')
+  const { knowledges } = useKnowledgeStore()
 
   const getFilteredTasks = (taskList: Task[]) => {
     if (filter === 'none') return taskList
@@ -39,6 +42,41 @@ const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
 
   const incompleteTasks = getFilteredTasks(tasks.filter(t => !t.completed))
   const completedTasks = tasks.filter(t => t.completed)
+
+  // ナレッジ表示の場合
+  if (filter === 'knowledge') {
+    if (knowledges.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full text-gray-400">
+          <svg className="w-16 h-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p className="text-sm">ナレッジがありません</p>
+          <p className="text-xs mt-1">タグボタンからナレッジを追加してください</p>
+        </div>
+      )
+    }
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <button
+              onClick={() => setFilter('today')}
+              className="px-2 py-0.5 text-xs font-semibold uppercase tracking-wider rounded-full bg-purple-500 text-white"
+            >
+              ナレッジ ({knowledges.length})
+            </button>
+          </div>
+          <div className="space-y-2">
+            {knowledges.map(knowledge => (
+              <KnowledgeItem key={knowledge.id} knowledge={knowledge} />
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (tasks.length === 0) {
     return (
@@ -86,6 +124,12 @@ const TaskList: React.FC<TaskListProps> = ({ tasks }) => {
               }`}
             >
               1年
+            </button>
+            <button
+              onClick={() => setFilter('knowledge')}
+              className="px-2 py-0.5 text-xs rounded-full bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
+            >
+              ナレッジ
             </button>
           </div>
           <div className="space-y-2">

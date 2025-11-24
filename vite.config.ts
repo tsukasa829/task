@@ -39,17 +39,11 @@ export default defineConfig(({ mode }) => {
           popup: 'src/popup/popup.html'
         },
         external: (id) => {
-          // Node.js専用モジュールを除外
-          return id.includes('nodefs') || id.includes('node:')
+          // Node.js専用モジュール(nodefs.js)のみ除外、PGlite本体はバンドルに含める
+          return id.includes('/nodefs.js') || id.includes('node:')
         }
       },
       chunkSizeWarningLimit: 10000
-    },
-    optimizeDeps: {
-      exclude: ['@electric-sql/pglite'],
-      esbuildOptions: {
-        target: 'esnext'
-      }
     },
     define: {
       'process.env.VITE_MODE': JSON.stringify('production'),

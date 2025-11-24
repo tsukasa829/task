@@ -3,7 +3,7 @@ import { Task } from '../types'
 import { useTaskStore } from '../stores/todoStore'
 import { useKnowledgeStore } from '../stores/knowledgeStore'
 import { useTagStore } from '../stores/tagStore'
-import * as api from '../services/api-pglite'
+import * as api from '../services/api-indexeddb'
 
 interface TaskItemProps {
   task: Task
@@ -51,7 +51,7 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, filterType }) => {
 
   const handleConvertToKnowledge = async (tag: string) => {
     // TODOのtitleをcontentとしてナレッジに追加
-    addKnowledge(task.title, tag)
+    await addKnowledge(task.title, tag)
     
     // TODOを削除
     await deleteTaskWithApi(task.id)

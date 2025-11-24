@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { TaskStore } from '../types'
-import * as api from '../services/api-pglite'
+import * as api from '../services/api-indexeddb'
 
 // 定期同期の間隔（ミリ秒）
 export const SYNC_INTERVAL_MS = 60 * 1000 // 1分

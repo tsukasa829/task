@@ -40,7 +40,7 @@ const KnowledgeItem: React.FC<KnowledgeItemProps> = ({ knowledge }) => {
         </div>
 
         <button
-          onClick={() => deleteKnowledge(knowledge.id)}
+          onClick={() => void deleteKnowledge(knowledge.id)}
           className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 rounded transition-all"
           title="削除"
         >

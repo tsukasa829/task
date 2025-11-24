@@ -1,8 +1,8 @@
 import { create } from 'zustand'
 import { Knowledge } from '../types'
-import * as api from '../services/api-pglite'
+import * as db from '../services/indexeddb'
 
-const RECENT_TAGS_KEY = 'task_recent_tags'
+const STORE_NAME = db.STORES.KNOWLEDGES
 
 interface KnowledgeStore {
   knowledges: Knowledge[]
@@ -10,78 +10,62 @@ interface KnowledgeStore {
   isLoading: boolean
   
   // Actions
-  fetchKnowledges: () => Promise<void>
   addKnowledge: (content: string, tag: string) => Promise<void>
   deleteKnowledge: (id: string) => Promise<void>
+  loadKnowledges: () => Promise<void>
   updateRecentTags: (tag: string) => void
   getTopTagsByCount: (limit: number) => string[]
 }
 
-// 最近使用したタグをLocalStorageから読み込み
-const loadRecentTags = (): string[] => {
-  try {
-    const stored = localStorage.getItem(RECENT_TAGS_KEY)
-    return stored ? JSON.parse(stored) : []
-  } catch (error) {
-    return []
-  }
-}
-
-// 最近使用したタグをLocalStorageに保存
-const saveRecentTags = (tags: string[]) => {
-  try {
-    localStorage.setItem(RECENT_TAGS_KEY, JSON.stringify(tags))
-  } catch (error) {
-    console.error('Failed to save recent tags:', error)
-  }
-}
-
 export const useKnowledgeStore = create<KnowledgeStore>((set, get) => ({
   knowledges: [],
-  recentTags: loadRecentTags(),
+  recentTags: [],
   isLoading: false,
 
-  fetchKnowledges: async () => {
-    set({ isLoading: true })
-    try {
-      const knowledges = await api.fetchKnowledges()
-      set({ knowledges, isLoading: false })
-    } catch (error) {
-      console.error('Failed to fetch knowledges:', error)
-      set({ isLoading: false })
-    }
-  },
-
   addKnowledge: async (content: string, tag: string) => {
-    try {
-      const newKnowledge = await api.addKnowledge(content, tag)
-      set((state) => ({
-        knowledges: [...state.knowledges, newKnowledge]
-      }))
-      
-      // タグを最近使用したタグに追加
-      get().updateRecentTags(tag)
-    } catch (error) {
-      console.error('Failed to add knowledge:', error)
+    const newKnowledge: Knowledge = {
+      id: `KNOWLEDGE:${Date.now()}`,
+      content,
+      tag,
+      createdAt: new Date().toISOString()
     }
+
+    await db.add(STORE_NAME, newKnowledge)
+    
+    set((state) => ({
+      knowledges: [...state.knowledges, newKnowledge]
+    }))
+
+    // タグを最近使用したタグに追加
+    get().updateRecentTags(tag)
   },
 
   deleteKnowledge: async (id: string) => {
-    try {
-      await api.deleteKnowledge(id)
-      set((state) => ({
-        knowledges: state.knowledges.filter(k => k.id !== id)
-      }))
-    } catch (error) {
-      console.error('Failed to delete knowledge:', error)
-    }
+    await db.deleteItem(STORE_NAME, id)
+    
+    set((state) => ({
+      knowledges: state.knowledges.filter(k => k.id !== id)
+    }))
+  },
+
+  loadKnowledges: async () => {
+    set({ isLoading: true })
+    const knowledges = await db.getAll<Knowledge>(STORE_NAME)
+    set({ knowledges, isLoading: false })
   },
 
   updateRecentTags: (tag: string) => {
     set((state) => {
       // タグを先頭に追加し、重複を削除、最大5件まで保持
       const newTags = [tag, ...state.recentTags.filter(t => t !== tag)].slice(0, 5)
-      saveRecentTags(newTags)
+      
+      // recentTagsもlocalStorageに保存
+      try {
+        localStorage.setItem('task_recent_tags', JSON.stringify(newTags))
+      } catch (error) {
+        console.error('Failed to save recent tags:', error)
+      }
+      
       return { recentTags: newTags }
     })
   },
@@ -103,5 +87,15 @@ export const useKnowledgeStore = create<KnowledgeStore>((set, get) => ({
   }
 }))
 
-// 初回ロード
-useKnowledgeStore.getState().fetchKnowledges()
+// 初期化時に最近使用したタグを読み込み
+const loadRecentTags = () => {
+  try {
+    const stored = localStorage.getItem('task_recent_tags')
+    return stored ? JSON.parse(stored) : []
+  } catch (error) {
+    return []
+  }
+}
+
+// ストア初期化時に最近のタグを読み込む
+useKnowledgeStore.setState({ recentTags: loadRecentTags() })

@@ -8,8 +8,8 @@ const STORAGE_KEY = 'task_form_draft'
 const Header: React.FC = () => {
   const [showMenu, setShowMenu] = useState(false)
   const { tasks, addTaskWithApi } = useTaskStore()
-  const { addKnowledge, getTopTagsByCount, knowledges, fetchKnowledges } = useKnowledgeStore()
-  const { tags, fetchTags } = useTagStore()
+  const { addKnowledge, getTopTagsByCount, knowledges } = useKnowledgeStore()
+  const { tags } = useTagStore()
   const [title, setTitle] = useState('')
   
   // ナレッジ数の多い順に3個表示、0件の場合はデフォルトタグ
@@ -17,11 +17,8 @@ const Header: React.FC = () => {
   const defaultTagNames = tags.map(t => t.name).slice(0, 3)
   const displayTags = topTags.length > 0 ? topTags : defaultTagNames
 
-  // PGliteデータとlocalStorageを初期化
+  // localStorage から復元
   useEffect(() => {
-    fetchKnowledges()
-    fetchTags()
-    
     const savedDraft = localStorage.getItem(STORAGE_KEY)
     if (savedDraft) {
       setTitle(savedDraft)
@@ -65,7 +62,7 @@ const Header: React.FC = () => {
       const content = trimmedTitle.substring(0, trimmedTitle.lastIndexOf(tagMatch[0])).trim()
       
       if (content) {
-        addKnowledge(content, tag)
+        await addKnowledge(content, tag)
         
         // フォームをリセットし、localStorage もクリア
         setTitle('')
@@ -107,10 +104,10 @@ const Header: React.FC = () => {
     localStorage.removeItem(STORAGE_KEY)
   }
 
-  const handleQuickKnowledge = (tag: string) => {
+  const handleQuickKnowledge = async (tag: string) => {
     if (!title.trim()) return
     
-    addKnowledge(title.trim(), tag)
+    await addKnowledge(title.trim(), tag)
     
     // フォームをリセットし、localStorage もクリア
     setTitle('')

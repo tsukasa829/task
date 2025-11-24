@@ -1,16 +1,27 @@
 import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import { useTaskStore, SYNC_INTERVAL_MS } from '../stores/todoStore'
+import { useKnowledgeStore } from '../stores/knowledgeStore'
+import { useTagStore } from '../stores/tagStore'
 import TaskList from '../components/TaskList'
 import Header from '../components/Header'
 import '../styles/index.css'
 
 const Popup: React.FC = () => {
   const { tasks, isLoading, error, fetchTasks, syncToGitHub } = useTaskStore()
+  const loadKnowledges = useKnowledgeStore(state => state.loadKnowledges)
+  const loadTags = useTagStore(state => state.loadTags)
 
-  // 起動時にタスクを取得
+  // 起動時にすべてのデータを取得
   useEffect(() => {
-    fetchTasks()
+    const init = async () => {
+      await Promise.all([
+        fetchTasks(),
+        loadKnowledges(),
+        loadTags()
+      ])
+    }
+    init()
     
     // 定期同期を設定（1分ごと）
     const syncInterval = setInterval(() => {

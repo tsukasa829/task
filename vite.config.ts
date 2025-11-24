@@ -31,20 +31,29 @@ export default defineConfig(({ mode }) => {
       })
     ],
     base: './',
+    publicDir: 'public',
     build: {
+      target: 'esnext',
       rollupOptions: {
         input: {
           popup: 'src/popup/popup.html'
         },
-        external: ['@electric-sql/pglite']
+        external: (id) => {
+          // Node.js専用モジュールを除外
+          return id.includes('nodefs') || id.includes('node:')
+        }
       },
       chunkSizeWarningLimit: 10000
     },
     optimizeDeps: {
-      exclude: ['@electric-sql/pglite']
+      exclude: ['@electric-sql/pglite'],
+      esbuildOptions: {
+        target: 'esnext'
+      }
     },
     define: {
-      'process.env.VITE_MODE': JSON.stringify('production')
+      'process.env.VITE_MODE': JSON.stringify('production'),
+      'process.env.NODE_ENV': JSON.stringify('production')
     }
   }
 })
